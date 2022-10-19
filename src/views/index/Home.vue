@@ -4,9 +4,9 @@
       <div class="logo-wrapper">
         <div class="logo">
           <img :src="logo" alt="logo"> Form Generator
-          <a class="github" href="https://github.com/JakHuang/form-generator" target="_blank">
+          <!-- <a class="github" href="https://github.com/JakHuang/form-generator" target="_blank">
             <img src="https://github.githubassets.com/pinned-octocat.svg" alt>
-          </a>
+          </a> -->
         </div>
       </div>
       <el-scrollbar class="left-scrollbar">
@@ -44,6 +44,9 @@
 
     <div class="center-board">
       <div class="action-bar">
+        <el-button icon="el-icon-plus" type="text" @click="handleForm">
+          保存
+        </el-button>
         <el-button icon="el-icon-video-play" type="text" @click="run">
           运行
         </el-button>
@@ -116,6 +119,21 @@
       @confirm="generate"
     />
     <input id="copyNode" type="hidden">
+    <!--表单配置详情-->
+    <el-dialog :title="formTitle" :visible.sync="formOpen" width="500px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="表单名称" prop="formName">
+          <el-input v-model="form.formName" placeholder="请输入表单名称" />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input v-model="form.remark" placeholder="请输入备注" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -147,6 +165,8 @@ import {
   getDrawingList, saveDrawingList, getIdGlobal, saveIdGlobal, getFormConf
 } from '@/utils/db'
 import loadBeautifier from '@/utils/loadBeautifier'
+// import axios from 'axios'
+// import { getForm, addForm, updateForm } from '@/api/form'
 
 let beautifier
 const emptyActiveData = { style: {}, autosize: {} }
@@ -200,7 +220,18 @@ export default {
           title: '布局型组件',
           list: layoutComponents
         }
-      ]
+      ],
+      formOpen: false,
+      formTitle: '',
+      // 表单参数
+      form: {
+        formId: null,
+        formName: null,
+        formContent: null,
+        remark: null
+      },
+      // 表单校验
+      rules: {}
     }
   },
   computed: {
@@ -413,6 +444,59 @@ export default {
       this.drawingList = deepClone(data.fields)
       delete data.fields
       this.formConf = data
+    },
+    /** 表单基本信息 */
+    handleForm() {
+      this.formData = {
+        fields: deepClone(this.drawingList),
+        ...this.formConf
+      }
+      this.form.formContent = JSON.stringify(this.formData)
+      this.formOpen = true
+      this.formTitle = '添加表单'
+    },
+    // 表单重置
+    reset() {
+      this.form = {
+        formId: null,
+        formName: null,
+        formContent: null,
+        remark: null
+      }
+      this.resetForm('form')
+    },
+    // 取消按钮
+    cancel() {
+      this.formOpen = false
+      this.reset()
+    },
+    /** 保存表单信息 */
+    submitForm() {
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          if (this.form.formId != null) {
+            /* updateForm(this.form).then(response => {
+              this.msgSuccess('修改成功')
+            }) */
+          } else {
+            // addForm(this.form).then(response => {
+            //   this.msgSuccess('新增成功')
+            // })
+            this.$axios
+              .post('/flowable/form', this.form).then(response => {
+                this.list = response.data.result
+              }).catch(error => {
+                console.log(error)
+              })
+          }
+          this.drawingList = []
+          this.idGlobal = 100
+          this.open = false
+          // 关闭当前标签页并返回上个页面
+          // this.$store.dispatch('tagsView/delView', this.$route)
+          // this.$router.go(-1)
+        }
+      })
     }
   }
 }

@@ -9,6 +9,7 @@ import Tinymce from '@/components/tinymce/index.vue'
 Vue.component('tinymce', Tinymce)
 
 Vue.config.productionTip = false
+axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 Vue.prototype.$axios = axios
 
 new Vue({

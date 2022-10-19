@@ -15,10 +15,11 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
+
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production'
-    ? '/form-generator/'
-    : '/',
+  // publicPath: process.env.NODE_ENV === 'production' ? '/form-generator/' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/dist/' : '/',
+  assetsDir: 'static',
   pages: {
     index: {
       entry: 'src/views/index/main.js',
@@ -36,7 +37,19 @@ module.exports = {
     }
   },
   devServer: {
-    overlay: false
+    overlay: false,
+    proxy: {
+        '/api': {
+            // 此处的写法，目的是为了 将 /api 替换成 https://www.baidu.com/
+            target: 'localhost:8080',
+            // 允许跨域
+            changeOrigin: true,
+            ws: true,
+            pathRewrite: {
+                '^/api': ''
+            }
+        }
+    }
   },
   productionSourceMap: false,
   configureWebpack: {
